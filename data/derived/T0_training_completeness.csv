@@ -1,0 +1,11 @@
+method,n_runs,best_val_dice_min,best_val_dice_max,epochs_min,epochs_max,batch_size,status
+CCSDG,6,0.873326,0.895194,13,20,4,complete
+CSDG,6,0.852654,0.892036,10,20,4,complete
+DSU,6,0.847817,0.893908,10,20,4,complete
+MixStyle,6,0.862294,0.899019,14,20,4,complete
+spatial_warp_aug,6,0.847448,0.877635,14,20,4,complete
+fourier_amp_aug,6,0.862769,0.893593,13,20,4,complete
+ibn_whitening,6,0.860616,0.896106,11,19,4,complete
+spectral_consistency,6,0.862697,0.894780,11,20,4,complete
+spectral_ibn_combo,6,0.866947,0.898618,12,20,4,complete
+strong_aug_floor,6,0.867582,0.898782,10,20,4,complete

@@ -1,0 +1,13 @@
+__pycache__/
+.pytest_cache/
+.DS_Store
+*.pyc
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+data/raw/
+figures/.mplconfig/
+figures/generated/
+tables/generated_tables/
+reproduced/

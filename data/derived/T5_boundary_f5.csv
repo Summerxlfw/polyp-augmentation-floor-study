@@ -1,0 +1,13 @@
+comparison,metric,higher_is_better,mean_delta_candidate_minus_reference,cell_t_ci_low,cell_t_ci_high,mean_improvement,improvement_cell_t_ci_low,improvement_cell_t_ci_high,improved_cells_of_6,paired_t_p,holm_p,multiplicity_family,status
+spatial_warp_aug - warp_alpha015,HD95_px,False,-10.742530577,-27.621857372,6.136796218,10.742530577,-6.136796218,27.621857372,5,0.162766975,0.488300925,F5-HD95,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_alpha100,HD95_px,False,-45.568932407,-91.660998167,0.523133353,45.568932407,-0.523133353,91.660998167,6,0.051805016,0.207220063,F5-HD95,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_shift_only,HD95_px,False,-1.557262905,-14.843337760,11.728811951,1.557262905,-11.728811951,14.843337760,3,0.775314939,0.775314939,F5-HD95,canonical_reconciled_bounded_wording
+slaug_official_plus_warp - official_SLAug,HD95_px,False,-10.744870727,-31.758147024,10.268405570,10.744870727,-10.268405570,31.758147024,4,0.245764007,0.491528015,F5-HD95,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_alpha015,weighted_Fbeta,True,-0.006696834,-0.042427450,0.029033781,-0.006696834,-0.042427450,0.029033781,3,0.650301341,0.855503744,F5-Fbw,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_alpha100,weighted_Fbeta,True,0.146553145,0.097133429,0.195972861,0.146553145,0.097133429,0.195972861,6,0.000617669,0.002470675,F5-Fbw,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_shift_only,weighted_Fbeta,True,0.027238223,-0.031285083,0.085761528,0.027238223,-0.031285083,0.085761528,4,0.285167915,0.855503744,F5-Fbw,canonical_reconciled_bounded_wording
+slaug_official_plus_warp - official_SLAug,weighted_Fbeta,True,-0.020811162,-0.079424247,0.037801923,-0.020811162,-0.079424247,0.037801923,2,0.403256911,0.855503744,F5-Fbw,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_alpha015,Boundary_IoU,True,-0.004049886,-0.025621412,0.017521640,-0.004049886,-0.025621412,0.017521640,3,0.649762281,0.814521409,F5-BIoU,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_alpha100,Boundary_IoU,True,0.204522613,0.176820068,0.232225158,0.204522613,0.176820068,0.232225158,6,0.000007485,0.000029941,F5-BIoU,canonical_reconciled_bounded_wording
+spatial_warp_aug - warp_shift_only,Boundary_IoU,True,0.017300561,-0.023600965,0.058202087,0.017300561,-0.023600965,0.058202087,3,0.326514846,0.814521409,F5-BIoU,canonical_reconciled_bounded_wording
+slaug_official_plus_warp - official_SLAug,Boundary_IoU,True,-0.018859152,-0.058095791,0.020377487,-0.018859152,-0.058095791,0.020377487,1,0.271507136,0.814521409,F5-BIoU,canonical_reconciled_bounded_wording

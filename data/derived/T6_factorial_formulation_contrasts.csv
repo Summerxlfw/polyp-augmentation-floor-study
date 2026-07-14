@@ -1,0 +1,6 @@
+contrast_id,definition,mean_delta_dice,positive_cells_of_6,cell_t_ci_low,cell_t_ci_high,paired_t_p,exact_sign_flip_p,holm_p,holm_family,status
+sync_no_blend,U1B0-U0B0,0.097313289,6,0.039488681,0.155137896,0.007527458,0.03125,0.022582375,F3-new existing,registered_simple_contrast
+sync_blend,U1B1-U0B1,-0.007768777,3,-0.036411450,0.020873896,0.516744395,0.62500,0.516744395,F6-posthoc,posthoc_not_separated
+blend_unpaired,U0B1-U0B0,0.129394073,6,0.063044051,0.195744094,0.004059036,0.03125,0.016236144,F2 existing,registered_simple_contrast
+blend_paired,U1B1-U1B0,0.024312007,4,-0.009581740,0.058205754,0.124524734,0.12500,0.249049469,F6-posthoc,posthoc_not_separated
+interaction,(U1B1-U1B0)-(U0B1-U0B0),-0.105082066,0,-0.188283043,-0.021881089,0.022781142,0.03125,0.068343427,F6-posthoc,consistent_point_pattern_not_holm_significant

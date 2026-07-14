@@ -1,0 +1,12 @@
+comparison,stratum,n_cases,n_videos,mean_delta,cell_t_ci_low,cell_t_ci_high,supporting_video_cluster_ci_low,supporting_video_cluster_ci_high,positive_cells_of_6,paired_t_p,holm_p,multiplicity_family,status
+spatial_warp_aug - strong_aug_floor,hard_flat_IIa,101,34,0.0250167954,-0.0008349363,0.0508685271,-0.0044233186,0.0614647040,5,0.0553262085,0.5532620855,F1,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,all,285,100,0.0072763029,-0.0105235027,0.0250761086,-0.0077031066,0.0235923565,4,0.3414545576,1.0000000000,F1-all,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,IIa,101,34,0.0250167954,-0.0008349363,0.0508685271,-0.0044233186,0.0614647040,5,0.0553262085,0.2213048342,F4-shape,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,Is,134,49,0.0034818756,-0.0100617251,0.0170254763,-0.0101435073,0.0159898927,3,0.5379301348,1.0000000000,F4-shape,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,Ip,28,8,-0.0302306369,-0.0636361902,0.0031749164,-0.0621274066,0.0011062910,0,0.0675241615,0.2213048342,F4-shape,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,Isp,22,9,-0.0033210682,-0.0185839623,0.0119418259,-0.0271508859,0.0207580254,3,0.6000596163,1.0000000000,F4-shape,canonical_reconciled_bounded_wording
+delta_IIa - delta_Ip,IIa_minus_Ip,,,0.0552474323,0.0334994064,0.0769954581,,,6,0.0012598562,0.0062992812,F4-shape,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,small,95,40,0.0156887035,-0.0112705145,0.0426479215,-0.0119047694,0.0480851189,5,0.1949198782,0.2071076827,F4-size,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,mid,95,58,0.0175978789,-0.0035967584,0.0387925163,0.0019891800,0.0338186096,5,0.0859295197,0.2071076827,F4-size,canonical_reconciled_bounded_wording
+spatial_warp_aug - strong_aug_floor,large,95,38,-0.0114576737,-0.0242160998,0.0013007525,-0.0275063686,0.0049076529,1,0.0690358942,0.2071076827,F4-size,canonical_reconciled_bounded_wording
+delta_large - delta_small,large_minus_small,,,-0.0271463772,-0.0488150072,-0.0054777472,,,1,0.0234547929,0.0938191716,F4-size,canonical_reconciled_bounded_wording

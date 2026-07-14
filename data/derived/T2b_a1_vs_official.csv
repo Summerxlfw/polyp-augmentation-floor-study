@@ -1,0 +1,2 @@
+comparison,stratum,n_cases,n_videos,mean_delta,cell_t_ci_low,cell_t_ci_high,positive_cells_of_6,paired_t_p,multiplicity_family,status
+spatial_warp_aug - official_SLAug,hard_flat_IIa,101,34,-0.0061454441,-0.0768993145,0.0646084264,2,0.8321588759,size1_head_to_head,canonical_reconciled_bounded_wording

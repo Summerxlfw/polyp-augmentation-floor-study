@@ -1,0 +1,5 @@
+name,morphology_group,mean_delta,delta_ci_low,delta_ci_high,paired_t_p,exact_sign_flip_p,wilcoxon_p,n_source_seed_cells,holm_p
+interaction,hard_flat_IIa,3.0,-0.1711578498349835,-0.06355752310231023,0.022781142420406544,0.03125,0.03125,6.0,
+sync_effect_blend (U1B1-U0B1),,,,,0.5167443946604173,,,,0.5167443946604173
+blend_effect_paired (U1B1-U1B0),,,,,0.1245247343834306,,,,0.2490494687668612
+interaction,,,,,0.022781142420406544,,,,0.06834342726121963

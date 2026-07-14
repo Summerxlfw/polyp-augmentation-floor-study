@@ -1,0 +1,15 @@
+dimension,level_or_arm,n,unit,status,source
+source_center,C1,206 train / 45 validation,positive-mask frames,verified,canonical joint-affine run logs under split 8ca34615
+source_center,C3,359 train / 96 validation,positive-mask frames,verified,canonical joint-affine run logs under split 8ca34615
+held_out_centers,C1 source setting,1160,positive-mask frames,verified,Methods evidence and frozen held-out result matrix
+held_out_centers,C3 source setting,956,positive-mask frames,verified,Methods evidence and frozen held-out result matrix
+random_seed,0;1;2,3,seeds,ready,run matrix
+paired_unit,source_center x seed,6,cells,ready,run matrix
+external_dataset,SUN-SEG,49136,frames,ready,external manifest
+external_unit,lesion case,285,cases,ready,external manifest
+external_cluster,video,100,videos,ready,external manifest
+phenotype,Is;IIa;Ip;Isp,134;101;28;22,cases,ready,external manifest
+area_proxy,small;mid;large,95;95;95,cases,ready,derived tertiles
+formal_matrix,10 protocol arms,60,runs,complete,T0 training audit
+official_comparator,official SLAug,6,runs,complete,official-code port audit
+structural_control,joint_affine_floor,6,runs,complete,joint-affine final-control audit
