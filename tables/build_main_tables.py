@@ -25,29 +25,29 @@ T5 = TABLE_DIR / "T5_boundary_f5.csv"
 T6 = TABLE_DIR / "T6_factorial_formulation_contrasts.csv"
 
 DISPLAY = {
-    "official_SLAug": "Official SLAug",
+    "official_SLAug": "SLAug",
     "spatial_warp_aug": "Spatial warp",
     "fourier_amp_aug": "Fourier amplitude",
-    "CCSDG": "CCSDG",
+    "CCSDG": "Channel-style perturbation",
     "spectral_consistency": "Spectral consistency",
-    "MixStyle": "MixStyle",
-    "DSU": "DSU",
-    "CSDG": "CSDG",
-    "spectral_ibn_combo": "Spectral + IBN",
-    "ibn_whitening": "IBN whitening",
+    "MixStyle": "MixStyle-style perturbation",
+    "DSU": "DSU-style perturbation",
+    "CSDG": "Bias-field perturbation",
+    "spectral_ibn_combo": "Spectral + whitening",
+    "ibn_whitening": "Feature whitening",
 }
 ORDER = list(DISPLAY)
-FIDELITY = {
-    "official_SLAug": "official-code",
-    "spatial_warp_aug": "ours",
-    "fourier_amp_aug": r"coverage$^{\dagger}$",
-    "CCSDG": r"coverage$^{\dagger}$",
-    "spectral_consistency": r"coverage$^{\dagger}$",
-    "MixStyle": r"coverage$^{\dagger}$",
-    "DSU": r"coverage$^{\dagger}$",
-    "CSDG": r"coverage$^{\dagger}$",
-    "spectral_ibn_combo": r"coverage$^{\dagger}$",
-    "ibn_whitening": r"coverage$^{\dagger}$",
+IMPLEMENTATION = {
+    "official_SLAug": "Authors' code adapted",
+    "spatial_warp_aug": "Study-defined configuration",
+    "fourier_amp_aug": r"Study implementation$^{\dagger}$",
+    "CCSDG": r"Study implementation$^{\dagger}$",
+    "spectral_consistency": r"Study implementation$^{\dagger}$",
+    "MixStyle": r"Study implementation$^{\dagger}$",
+    "DSU": r"Study implementation$^{\dagger}$",
+    "CSDG": r"Study implementation$^{\dagger}$",
+    "spectral_ibn_combo": r"Study implementation$^{\dagger}$",
+    "ibn_whitening": r"Study implementation$^{\dagger}$",
 }
 
 
@@ -81,12 +81,17 @@ def _table1() -> str:
     assert len(training) == 10 and int(training["n_runs"].sum()) == 60
     source = protocol[protocol["dimension"] == "source_center"].set_index("level_or_arm")
     held = protocol[protocol["dimension"] == "held_out_centers"].set_index("level_or_arm")
+    inventory = protocol[protocol["dimension"].isin(
+        ["formal_matrix", "named_comparator", "secondary_controls"]
+    )]
+    total = protocol[protocol["dimension"] == "total_training_runs"].iloc[0]
     assert source.loc["C1", "n"] == "206 train / 45 validation"
     assert source.loc["C3", "n"] == "359 train / 96 validation"
+    assert inventory["n"].astype(int).sum() == int(total["n"]) == 102
     return rf"""
 \begin{{table*}}[t]
 \centering
-\caption{{Cohort composition, analysis units, and run completeness. PolypGen counts are positive-mask frames; SUN-SEG cases are nested in videos.}}
+\caption{{Cohort composition, analysis units, and experimental summary. PolypGen counts are positive-mask frames; SUN-SEG cases are nested in videos.}}
 \label{{tab:cohort}}
 \scriptsize
 \setlength{{\tabcolsep}}{{3pt}}
@@ -106,12 +111,13 @@ Analysis unit & Lesion case & 285 & cases nested in 100 videos \\
 Paris morphology & Is / IIa / Ip / Isp & 134 / 101 / 28 / 22 & cases \\
 Area proxy & Small / middle / large & 95 / 95 / 95 & reference-mask tertiles \\
 \addlinespace
-\multicolumn{{4}}{{l}}{{\textit{{Experimental units and run matrix}}}} \\
-Primary paired unit & Source center $\times$ seed & 6 & 2 sources $\times$ 3 seeds \\
-Harmonized formal matrix & 10 training configurations & 60 & completed runs \\
-Official comparator & Official SLAug & 6 & completed runs \\
-Structural control & Joint affine & 6 & completed runs \\
-Optimization audit & Best validation Dice & {training['best_val_dice_min'].min():.4f}--{training['best_val_dice_max'].max():.4f} & batch size 4; epochs {int(training['epochs_min'].min())}--{int(training['epochs_max'].max())} \\
+\multicolumn{{4}}{{l}}{{\textit{{Experimental units and training configurations}}}} \\
+Repeated training unit & Source center $\times$ seed & 6 & 3 seeds nested within each of 2 fixed sources \\
+Matched configuration set & 10 training configurations & 60 & completed runs \\
+Named comparator & SLAug & 6 & completed runs \\
+Secondary controls & 6 training configurations & 36 & completed runs \\
+Complete study & 17 training configurations & 102 & completed runs \\
+Training summary & Best validation Dice & {training['best_val_dice_min'].min():.4f}--{training['best_val_dice_max'].max():.4f} & 60 runs; batch size 4; epochs {int(training['epochs_min'].min())}--{int(training['epochs_max'].max())} \\
 \bottomrule
 \end{{tabularx}}
 \end{{table*}}
@@ -129,31 +135,31 @@ def _table2() -> str:
         h = hard.loc[candidate]
         a = all_case.loc[candidate]
         rows.append(
-            f"{DISPLAY[candidate]} & {FIDELITY[candidate]} & {_delta(h.mean_delta)} & "
+            f"{DISPLAY[candidate]} & {IMPLEMENTATION[candidate]} & {_delta(h.mean_delta)} & "
             f"{_ci(h.cell_t_ci_low, h.cell_t_ci_high)} & {int(h.positive_cells_of_6)}/6 & "
             f"{_p(h.holm_p)} & {_delta(a.mean_delta)} & {_ci(a.cell_t_ci_low, a.cell_t_ci_high)} \\\\"
         )
     rows_text = "\n".join(rows)
     direct_row = (
-        f"Spatial warp $-$ official SLAug & ours vs official-code & {_delta(direct.mean_delta)} & "
+        f"Spatial warp $-$ SLAug & Direct matched comparison & {_delta(direct.mean_delta)} & "
         f"{_ci(direct.cell_t_ci_low, direct.cell_t_ci_high)} & {int(direct.positive_cells_of_6)}/6 & "
         f"{_p(direct.paired_t_p)}$^{{\\ddagger}}$ & -- & -- \\\\"
     )
     return rf"""
 \begin{{table*}}[t]
 \centering
-\caption{{Paired Dice differences under the harmonized strong-augmentation protocol. Positive values favor the candidate.}}
+\caption{{Paired Dice differences under the shared strong-augmentation protocol. Positive values favor the configuration.}}
 \label{{tab:strong-floor}}
 \scriptsize
 \setlength{{\tabcolsep}}{{3.7pt}}
 \resizebox{{\textwidth}}{{!}}{{%
 \begin{{tabular}}{{@{{}}llrrrrrr@{{}}}}
 \toprule
-& & \multicolumn{{4}}{{c}}{{Hard-flat IIa}} & \multicolumn{{2}}{{c}}{{All cases}} \\
+& & \multicolumn{{4}}{{c}}{{Paris IIa}} & \multicolumn{{2}}{{c}}{{All cases}} \\
 \cmidrule(lr){{3-6}}\cmidrule(l){{7-8}}
-Intervention & Fidelity & $\Delta$ & 95\% CI & $+$/6 & $p$ & $\Delta$ & 95\% CI \\
+Configuration & Implementation & $\Delta$ & 95\% CI & Positive/6 & $p$ & $\Delta$ & 95\% CI \\
 \midrule
-\multicolumn{{8}}{{l}}{{\textit{{A. Candidate minus strong augmentation floor}}}} \\
+\multicolumn{{8}}{{l}}{{\textit{{A. Configuration minus strong augmentation floor}}}} \\
 {rows_text}
 \addlinespace
 \multicolumn{{8}}{{l}}{{\textit{{B. Direct matched comparison}}}} \\
@@ -162,7 +168,7 @@ Intervention & Fidelity & $\Delta$ & 95\% CI & $+$/6 & $p$ & $\Delta$ & 95\% CI 
 \end{{tabular}}
 }}
 \begin{{minipage}}{{0.98\textwidth}}
-\footnotesize $\Delta$ and confidence intervals use six paired source-by-seed differences. For panel A, $p$ is Holm-adjusted within the 10-comparison F1 or F1-all family. $^{{\ddagger}}$Panel B reports the paired-t $p$ value for the registered size-one head-to-head comparison. $^{{\dagger}}$Coverage implementations broaden the intervention families examined but are not native-recipe rankings.
+\footnotesize $\Delta$ and confidence intervals use six paired differences from repeated training units, with three seeds nested within each of two fixed source settings. For panel A, $p$ is Holm-adjusted within the 10-comparison Paris IIa or all-case configuration family. $^{{\ddagger}}$Panel B reports the paired-t $p$ value for the direct head-to-head comparison. $^{{\dagger}}$Study implementations were evaluated under the shared protocol and are not reproductions of the original recipes of similarly named methods.
 \end{{minipage}}
 \end{{table*}}
 """
@@ -194,7 +200,9 @@ def _table3() -> str:
             n_videos = "--" if pd.isna(row["n_videos"]) else str(int(row["n_videos"]))
             rows.append(
                 f"{labels[stratum]} & {n_cases} & {n_videos} & {_delta(row.mean_delta)} & "
-                f"{_ci(row.cell_t_ci_low, row.cell_t_ci_high)} & {int(row.positive_cells_of_6)}/6 & "
+                f"{_ci(row.cell_t_ci_low, row.cell_t_ci_high)} & "
+                f"{_ci(row.supporting_video_cluster_ci_low, row.supporting_video_cluster_ci_high)} & "
+                f"{int(row.positive_cells_of_6)}/6 & "
                 f"{_p(row.holm_p)} \\\\"
             )
         rows.append(r"\addlinespace")
@@ -205,15 +213,17 @@ def _table3() -> str:
 \caption{{Phenotype-conditioned Dice response of spatial warp augmentation relative to the strong augmentation floor.}}
 \label{{tab:phenotype}}
 \small
-\begin{{tabular}}{{@{{}}lrrrrrr@{{}}}}
+\resizebox{{\textwidth}}{{!}}{{%
+\begin{{tabular}}{{@{{}}lrrrrrrr@{{}}}}
 \toprule
-Stratum or contrast & Cases & Videos & $\Delta$ & 95\% CI & $+$/6 & Holm $p$ \\
+Stratum or contrast & Cases & Videos & $\Delta$ & Six-unit 95\% CI & Video-cluster 95\% CI & Positive/6 & Holm $p$ \\
 \midrule
 {rows_text}
 \bottomrule
 \end{{tabular}}
+}}
 \begin{{minipage}}{{0.92\textwidth}}
-\footnotesize Estimates and confidence intervals use six paired source-by-seed differences. F4-shape and F4-size are separate correction families and include the displayed difference-in-differences contrast. Morphology and area overlap: 26 of 28 Ip cases were large and none was small; the two panels are not independent confirmation.
+\footnotesize Six-unit intervals summarize repeated trainings under two fixed source settings; synchronized video-cluster intervals separately address test-video sampling. Morphology and area are outcome-informed exploratory correction families, each including the displayed difference-in-differences contrast. Morphology and area overlap: 26 of 28 Ip cases were large and none was small; the two panels are not independent confirmation.
 \end{{minipage}}
 \end{{table*}}
 """
@@ -236,14 +246,14 @@ def _table4() -> str:
     labels = {
         "strong_aug_floor": "Strong augmentation floor",
         "SLAug": "Spatial warp",
-        "CCSDG": "CCSDG",
-        "CSDG": "CSDG",
-        "DSU": "DSU",
-        "MixStyle": "MixStyle",
+        "CCSDG": "Channel-style perturbation",
+        "CSDG": "Bias-field perturbation",
+        "DSU": "DSU-style perturbation",
+        "MixStyle": "MixStyle-style perturbation",
         "fourier_amp_aug": "Fourier amplitude",
-        "ibn_whitening": "IBN whitening",
+        "ibn_whitening": "Feature whitening",
         "spectral_consistency": "Spectral consistency",
-        "spectral_ibn_combo": "Spectral + IBN",
+        "spectral_ibn_combo": "Spectral + whitening",
     }
     assert set(order) == set(table.index)
     rows = []
@@ -269,9 +279,9 @@ def _table4() -> str:
         )
     rows_text = "\n".join(rows)
     return rf"""
-\begin{{table*}}[t]
+\begin{{table}}[H]
 \centering
-\caption{{Descriptive absolute performance across the harmonized 10-configuration matrix.}}
+\caption{{Descriptive absolute performance across the shared-protocol 10-configuration matrix.}}
 \label{{tab:absolute-metrics}}
 \scriptsize
 \setlength{{\tabcolsep}}{{3.2pt}}
@@ -280,16 +290,16 @@ def _table4() -> str:
 \toprule
 & \multicolumn{{3}}{{c}}{{PolypGen frozen centers}} & \multicolumn{{5}}{{c}}{{SUN-SEG}} \\
 \cmidrule(lr){{2-4}}\cmidrule(l){{5-9}}
-Intervention & Macro Dice & $\Delta$ & $+$/6 & All Dice & IIa Dice & IIa HD95 & IIa F$_\beta^w$ & IIa BIoU \\
+Configuration & Macro Dice & $\Delta$ & Positive/6 & All Dice & IIa Dice & IIa HD95 & IIa F$_\beta^w$ & IIa BIoU \\
 \midrule
 {rows_text}
 \bottomrule
 \end{{tabular}}
 }}
 \begin{{minipage}}{{0.98\textwidth}}
-\footnotesize PolypGen macro Dice gives equal weight to the five frozen centers within each run; $\Delta$ is candidate minus floor across the six source-by-seed cells. SUN-SEG values are absolute six-cell means. This table is descriptive; adjusted inference is reported in Tables~\ref{{tab:strong-floor}} and \ref{{tab:phenotype}}. HD95 is in pixels and lower is better.
+\footnotesize PolypGen macro Dice gives equal weight to the five frozen centers within each run; $\Delta$ is configuration minus floor across the six repeated training units nested within two fixed sources. SUN-SEG values are absolute six-unit means. This table is descriptive; adjusted inference is reported in main-text Tables 2 and 3. HD95 is in pixels and lower is better.
 \end{{minipage}}
-\end{{table*}}
+\end{{table}}
 """
 
 
@@ -313,18 +323,18 @@ def _table5() -> str:
     return rf"""
 \begin{{table*}}[t]
 \centering
-\caption{{Hard-flat Dice contrasts in the completed four-formulation diagnostic.}}
+\caption{{Paris IIa Dice contrasts in the completed four-formulation diagnostic.}}
 \label{{tab:factorial}}
-\small
+\scriptsize
 \begin{{tabular}}{{@{{}}lrrrr@{{}}}}
 \toprule
-Contrast & $\Delta$ & 95\% CI & $+$/6 & Holm $p$ \\
+Contrast & $\Delta$ & 95\% CI & Positive/6 & Holm $p$ \\
 \midrule
 {rows_text}
 \bottomrule
 \end{{tabular}}
 \begin{{minipage}}{{0.92\textwidth}}
-\footnotesize The paired-softmix cell and F6 family were specified after inspection of the earlier controls. F3-new and F2 values retain their frozen families; the remaining contrasts and interaction use F6. The table characterizes implemented formulations and is not an orthogonal causal decomposition.
+\footnotesize The paired-softmix cell and its three-comparison correction family were specified after inspection of the earlier controls. Previously defined control contrasts retain their original correction families. Because this cell was specified post hoc, these contrasts are interpreted as formulation diagnostics rather than causal component effects.
 \end{{minipage}}
 \end{{table*}}
 """
@@ -341,7 +351,7 @@ def _table6() -> str:
         "spatial_warp_aug - warp_alpha015": "Spatial warp $-$ weak warp",
         "spatial_warp_aug - warp_alpha100": "Spatial warp $-$ severe mismatch",
         "spatial_warp_aug - warp_shift_only": "Spatial warp $-$ shift only",
-        "slaug_official_plus_warp - official_SLAug": "Combination $-$ official SLAug",
+        "slaug_official_plus_warp - official_SLAug": "Combination $-$ SLAug",
     }
     rows = []
     for row in table.itertuples(index=False):
@@ -353,22 +363,22 @@ def _table6() -> str:
         )
     rows_text = "\n".join(rows)
     return rf"""
-\begin{{table*}}[t]
+\begin{{table}}[H]
 \centering
 \caption{{Boundary-sensitive improvement in the four prespecified isolation comparisons.}}
 \label{{tab:boundary-isolation}}
 \scriptsize
 \begin{{tabular}}{{@{{}}llrrrr@{{}}}}
 \toprule
-Metric & Candidate comparison & Improvement & 95\% CI & $+$/6 & Holm $p$ \\
+Metric & Configuration comparison & Improvement & 95\% CI & Positive/6 & Holm $p$ \\
 \midrule
 {rows_text}
 \bottomrule
 \end{{tabular}}
 \begin{{minipage}}{{0.94\textwidth}}
-\footnotesize Improvement is oriented so that positive values favor the candidate; HD95 was sign-reversed because lower is better. Holm correction was applied separately within the four-comparison HD95, weighted-F, and Boundary-IoU families.
+\footnotesize Improvement is oriented so that positive values favor the first-named configuration; HD95 was sign-reversed because lower is better. Holm correction was applied separately within the four-comparison HD95, weighted-F, and Boundary-IoU families.
 \end{{minipage}}
-\end{{table*}}
+\end{{table}}
 """
 
 

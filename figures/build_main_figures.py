@@ -17,12 +17,10 @@ os.environ.setdefault("MPLCONFIGDIR", str(MPLCONFIG_DIR))
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 from scipy import stats
 
 
-MANUSCRIPT_DIR = FIGURE_DIR.parent
 REPOSITORY_DIR = FIGURE_DIR.parent
 OUTPUT_DIR = FIGURE_DIR / "generated"
 
@@ -59,16 +57,16 @@ METHOD_ORDER = [
     "ibn_whitening",
 ]
 DISPLAY = {
-    OFFICIAL_KEY: "Official SLAug",
-    SPATIAL_WARP_KEY: "Spatial warp (ours)",
+    OFFICIAL_KEY: "SLAug",
+    SPATIAL_WARP_KEY: "Spatial warp",
     "fourier_amp_aug": "Fourier amplitude†",
-    "CCSDG": "CCSDG†",
+    "CCSDG": "Channel perturb.†",
     "spectral_consistency": "Spectral consistency†",
-    "MixStyle": "MixStyle†",
-    "DSU": "DSU†",
-    "CSDG": "CSDG†",
-    "spectral_ibn_combo": "Spectral + IBN†",
-    "ibn_whitening": "IBN whitening†",
+    "MixStyle": "MixStyle-style†",
+    "DSU": "DSU-style†",
+    "CSDG": "Bias-field perturb.†",
+    "spectral_ibn_combo": "Spectral + whitening†",
+    "ibn_whitening": "Feature whitening†",
 }
 
 
@@ -204,7 +202,7 @@ def _plot_heatmap(formal: pd.DataFrame) -> dict[str, Path]:
         rotation=45,
         ha="right",
     )
-    ax.set_title("A  Phenotype-by-area response across harmonized configurations", loc="left", weight="bold")
+    ax.set_title("A  Phenotype-by-area response under the shared training protocol", loc="left", weight="bold")
     for i in range(values.shape[0]):
         for j in range(values.shape[1]):
             value = plot_values[i, j]
@@ -245,8 +243,8 @@ def _plot_heatmap(formal: pd.DataFrame) -> dict[str, Path]:
     fig.text(
         0.01,
         0.01,
-        "Values are candidate − strong augmentation floor; each tile equally averages six source×seed cells. "
-        "† Harmonized coverage implementation. Hatched cells contain no cases; no tile is a separate significance test.",
+        "Values are configuration − strong augmentation floor; each tile equally averages six repeated training units. "
+        "† Study implementation evaluated under the shared protocol. Hatched cells contain no cases; no tile is a separate significance test.",
         fontsize=7.4,
     )
     fig.subplots_adjust(left=0.16, right=0.98, top=0.91, bottom=0.22)
@@ -276,7 +274,7 @@ def _forest_data(formal: pd.DataFrame, boundary: pd.DataFrame) -> pd.DataFrame:
     floor = formal[formal["method"] == FLOOR]
     records: list[dict[str, object]] = []
     strata = [
-        ("Hard-flat IIa", "morphology_group", "hard_flat_IIa"),
+        ("Paris IIa", "morphology_group", "hard_flat_IIa"),
         ("Ip", "shape", "Ip"),
         ("Large", "size_bin", "large"),
     ]
@@ -289,7 +287,15 @@ def _forest_data(formal: pd.DataFrame, boundary: pd.DataFrame) -> pd.DataFrame:
                 {
                     "method": method,
                     "display": DISPLAY[method],
-                    "fidelity": "official" if method == OFFICIAL_KEY else ("ours" if method == SPATIAL_WARP_KEY else "coverage"),
+                    "implementation_class": (
+                        "author_code_adaptation"
+                        if method == OFFICIAL_KEY
+                        else (
+                            "study_configuration"
+                            if method == SPATIAL_WARP_KEY
+                            else "protocol_aligned"
+                        )
+                    ),
                     "stratum": stratum_label,
                     "mean_delta": mean,
                     "ci_low": low,
@@ -302,10 +308,10 @@ def _forest_data(formal: pd.DataFrame, boundary: pd.DataFrame) -> pd.DataFrame:
     t2 = pd.read_csv(T2_CSV)
     t3 = pd.read_csv(T3_CSV)
     expected = {
-        (SPATIAL_WARP_KEY, "Hard-flat IIa"): float(
+        (SPATIAL_WARP_KEY, "Paris IIa"): float(
             t2[(t2["multiplicity_family"] == "F1") & (t2["candidate"] == "spatial_warp_aug")].iloc[0]["mean_delta"]
         ),
-        (OFFICIAL_KEY, "Hard-flat IIa"): float(
+        (OFFICIAL_KEY, "Paris IIa"): float(
             t2[(t2["multiplicity_family"] == "F1") & (t2["candidate"] == "official_SLAug")].iloc[0]["mean_delta"]
         ),
         (SPATIAL_WARP_KEY, "Ip"): float(t3[t3["stratum"] == "Ip"].iloc[0]["mean_delta"]),
@@ -324,18 +330,12 @@ def _plot_forest(formal: pd.DataFrame, boundary: pd.DataFrame) -> dict[str, Path
     max_abs = float(np.nanmax(np.abs(data[["ci_low", "ci_high"]].to_numpy())))
     limit = max(0.05, math.ceil(max_abs / 0.05) * 0.05)
     y = np.arange(len(METHOD_ORDER))
-    styles = {
-        "official": {"marker": "D", "color": "#111111", "label": "Official-code port"},
-        "ours": {"marker": "o", "color": "#0072B2", "label": "Ours"},
-        "coverage": {"marker": "s", "color": "#777777", "label": "Harmonized coverage port†"},
-    }
     fig, axes = plt.subplots(1, 3, figsize=(10.8, 5.5), sharey=True)
-    for panel_idx, (ax, stratum) in enumerate(zip(axes, ["Hard-flat IIa", "Ip", "Large"], strict=True)):
+    for panel_idx, (ax, stratum) in enumerate(zip(axes, ["Paris IIa", "Ip", "Large"], strict=True)):
         subset = data[data["stratum"] == stratum].set_index("method").loc[METHOD_ORDER]
         ax.axvline(0, color="#333333", lw=0.9, ls="--", zorder=0)
         for row_idx, method in enumerate(METHOD_ORDER):
             row = subset.loc[method]
-            style = styles[str(row["fidelity"])]
             ax.errorbar(
                 float(row["mean_delta"]),
                 row_idx,
@@ -345,9 +345,9 @@ def _plot_forest(formal: pd.DataFrame, boundary: pd.DataFrame) -> dict[str, Path
                         [float(row["ci_high"] - row["mean_delta"])],
                     ]
                 ),
-                fmt=style["marker"],
-                color=style["color"],
-                ecolor=style["color"],
+                fmt="o",
+                color="#4C566A",
+                ecolor="#4C566A",
                 markersize=4.8,
                 elinewidth=1.1,
                 capsize=2.2,
@@ -360,23 +360,18 @@ def _plot_forest(formal: pd.DataFrame, boundary: pd.DataFrame) -> dict[str, Path
         ax.set_xlabel("Paired Dice difference")
         ax.spines[["top", "right"]].set_visible(False)
     axes[0].set_yticks(y, [DISPLAY[m] for m in METHOD_ORDER])
-    legend = [
-        Line2D([0], [0], marker=s["marker"], color="none", markerfacecolor=s["color"], markeredgecolor=s["color"], label=s["label"], markersize=5)
-        for s in styles.values()
-    ]
-    fig.legend(handles=legend, loc="upper center", ncol=3, frameon=False, bbox_to_anchor=(0.58, 0.995))
     fig.text(
         0.01,
         0.012,
-        "Candidate − strong augmentation floor; points and 95% CIs use six paired source×seed differences. "
-        "Ip and large are overlapping, not independent, strata. † Coverage rows are not native-recipe rankings.",
+        "Configuration − strong augmentation floor; points and 95% CIs use six repeated training-unit differences. "
+        "Ip and large are overlapping strata. † Study implementations were evaluated under the shared protocol.",
         fontsize=7.4,
     )
-    fig.subplots_adjust(left=0.22, right=0.99, top=0.88, bottom=0.16, wspace=0.16)
+    fig.subplots_adjust(left=0.22, right=0.99, top=0.92, bottom=0.16, wspace=0.16)
 
     outputs = {}
     for suffix in ("pdf", "svg", "png"):
-        path = OUTPUT_DIR / f"fig3_benefit_harm_forest.{suffix}"
+        path = OUTPUT_DIR / f"fig3_phenotype_response_forest.{suffix}"
         fig.savefig(path, bbox_inches="tight")
         outputs[suffix] = path
     plt.close(fig)

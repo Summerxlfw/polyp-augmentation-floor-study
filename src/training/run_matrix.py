@@ -2,9 +2,9 @@
 """L1 官方忠实复现臂 driver（不动预注册的 60-run FORMAL_ARMS 矩阵）。
 
 ## 背景
-主表原有的 "SLAug / CCSDG / CSDG / MixStyle / DSU" 全是 `faithful_light_reimpl`（单味轻量近似），
-其中 "SLAug" 更是**张冠李戴**（实现是空间仿射 warp，官方 SLAug 是强度域 location-scale + SBF）。
-这些臂不承重，不能用于"打赢具名 SOTA"的 claim。本 driver 跑**官方忠实复现**臂。
+主矩阵中的 "SLAug / CCSDG / CSDG / MixStyle / DSU" 是共享协议下的轻量研究实现，
+其中历史 key "SLAug" 实际对应空间仿射 warp，而已发表 SLAug 是强度域
+location-scale + SBF。本 driver 用于作者代码适配和协议对齐实验。
 
 ## 跑什么
 默认 `SLAug_official`（官方 GLA/LLA 双视图 + SBF 显著性融合 two-pass）× {C3,C1} × seed{0,1,2} = 6 run。

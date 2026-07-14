@@ -1,14 +1,14 @@
 # Polyp augmentation floor study
 
-This repository contains the code and derived evidence for a harmonized
+This repository contains the code and derived evidence for a controlled
 single-source cross-center study of polyp-segmentation training configurations.
-It accompanies the manuscript *What remains above a strong augmentation
-floor? Phenotype-conditioned analysis of cross-center polyp segmentation*.
+It accompanies the manuscript *Beyond aggregate Dice: Phenotype-conditioned
+responses under a strong augmentation floor for cross-center polyp
+segmentation*.
 
-The repository is an empirical-analysis release, not a claim that the included
-coverage implementations reproduce every cited method under its native recipe.
-Rows marked as coverage configurations must not be interpreted as rankings of
-the corresponding published systems.
+The repository is an empirical-analysis release. Protocol-aligned implementations
+test intervention families under the shared study protocol and do not claim to
+reproduce every cited system under its original publication recipe.
 
 ## What is included
 
@@ -18,7 +18,8 @@ the corresponding published systems.
   machine-specific paths changed to environment variables.
 - `src/evaluation/`: boundary metrics, paired statistics, and the project-level
   evaluation adapter retained for provenance.
-- `analysis/`: six-cell paired statistics, multiplicity families, factorial
+- `analysis/`: paired statistics across six repeated training units,
+  multiplicity families, synchronized video-cluster contrasts, factorial
   contrasts, and registry builders.
 - `data/case_level/`: derived per-case metrics; no raw patient images.
 - `data/derived/`: manuscript-facing result tables and plotting inputs.
@@ -65,18 +66,28 @@ python analysis/factorial_local_reanalysis.py \
   --out-dir reproduced/factorial
 ```
 
-The primary inferential unit is the source-center-by-seed cell (two source
-centers times three seeds). Case-level rows are not treated as independent
-replicates. Video-cluster resampling is supporting analysis.
+Paired summaries use six repeated training units, with three seeds nested
+within each of two fixed source settings. Their intervals describe training
+repetitions under those fixed settings rather than a population of possible
+source centers. Case-level rows are not treated as independent replicates;
+synchronized video-cluster resampling separately quantifies test-video
+sampling. The IIa-minus-Ip and large-minus-small families are explicitly
+recorded as multiplicity-controlled exploratory analyses.
 
 ## Training configuration
 
-Formal runs used Python 3.10.19, PyTorch 2.1.0, CUDA 12.1, batch size 4,
-20 epochs, patience 5, two source centers, and seeds 0, 1, and 2. The full
-pipeline also expects the authors' Polyp-PVT adapter and the official SLAug and
+Study runs used the `polyp_base_v5` environment with Python 3.10.19, PyTorch
+2.1.0, CUDA 12.1, cuDNN 8902, NVIDIA RTX 4090 GPUs, batch size 4, 20 epochs,
+patience 5, two source centers, and seeds 0, 1, and 2. The full
+pipeline also expects the authors' Polyp-PVT adapter and the public SLAug and
 CCSDG repositories. Those third-party sources and pretrained weights are not
-redistributed here; obtain them from their official repositories and follow
+redistributed here; obtain them from their source repositories and follow
 their licenses.
+
+The SLAug adaptation retained its two-pass update and used the shared study
+floor. The source implementation did not define a polyp-specific
+saliency-balancing-fusion grid size; this study used `S1_SBF_GRID_SIZE=8` for
+352 × 352 inputs.
 
 Before using the project-level driver, set at least:
 
@@ -84,7 +95,7 @@ Before using the project-level driver, set at least:
 export POLYP_PROJECT_ROOT=/path/to/checkout
 export POLYPGEN_ROOT=/path/to/PolypGen
 export SUNSEG_ROOT=/path/to/SUN-SEG
-export S1_REPRO_REPOS=/path/to/official/baseline/repos
+export S1_REPRO_REPOS=/path/to/public/baseline/repos
 export S1_CHECKPOINT_ROOT=/path/to/checkpoints
 ```
 
@@ -94,9 +105,14 @@ require model checkpoints.
 ## Data and privacy
 
 PolypGen and SUN-SEG are public datasets and should be obtained from their
-official sources. This repository redistributes only derived numerical metrics.
+source repositories. This repository redistributes only derived numerical metrics.
 It contains no raw endoscopy frames, annotations, private clinical data, or
 trained checkpoints. See `PROVENANCE.md` for hashes and release boundaries.
+
+Historical identifiers such as `official_SLAug` are retained only to preserve
+traceability to completed runs. They do not imply execution by the original
+authors or a publisher-designated reference implementation; public tables and
+figures use the method name `SLAug`.
 
 ## Citation and license
 

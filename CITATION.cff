@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this code or derived evidence, please cite the accompanying paper."
-title: "Polyp augmentation floor study: code and reproducibility assets"
+title: "Beyond aggregate Dice: reproducibility assets for phenotype-conditioned cross-center polyp segmentation"
 type: software
 authors:
   - family-names: Xia
@@ -14,5 +14,5 @@ authors:
     orcid: "https://orcid.org/0000-0003-1642-0168"
 repository-code: "https://github.com/Summerxlfw/polyp-augmentation-floor-study"
 license: MIT
-version: 0.1.0
+version: 0.1.1
 date-released: 2026-07-14

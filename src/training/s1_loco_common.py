@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""S1 LOCO gate 公共工具。
+"""单源跨中心训练与评估公共工具。
 
 本目录只承载 prep/smoke 的可复现入口；正式训练需用户再次明确 go。
 
@@ -54,7 +54,7 @@ POLYP_SIZE_ROOT = _env_path("POLYP_SIZE_ROOT", PROJECT_ROOT / "data" / "Polyp_Si
 SUNSEG_ROOT = _env_path("SUNSEG_ROOT", PROJECT_ROOT / "data" / "SUN-SEG")
 REPRO_ROOT = _env_path("POLYP_REPRO_ROOT", PROJECT_ROOT / "third_party" / "repro")
 THIRD_PARTY_ROOT = _env_path("POLYP_THIRD_PARTY_ROOT", PROJECT_ROOT / "third_party")
-# 官方 SOTA repo（忠实复现用；此前主表的 SLAug/CCSDG 等只是轻量近似，未接官方实现）
+# 第三方源码目录（用于作者代码适配；主矩阵中的部分同名配置是轻量研究实现）
 S1_REPRO_REPOS = _env_path("S1_REPRO_REPOS", PROJECT_ROOT / "03_experiments" / "repro_repos_s1_20260710")
 
 CENTER_IDS = (1, 2, 3, 4, 5, 6)
@@ -1060,7 +1060,7 @@ def _resize_grid_to(grid: torch.Tensor, size: tuple[int, int]) -> torch.Tensor:
 def apply_train_aug(img: Image.Image, mask: Image.Image, method: str) -> tuple[Image.Image, Image.Image]:
     """训练增强（单视图路径）。共享 floor = 几何 + 颜色抖动 + blur，各臂在其上叠自身机制。
 
-    ⚠ 标 `faithful_light_reimpl` 的臂只是原论文思想的**轻量近似**，不得用于"打赢具名 SOTA"的 claim。
+    ⚠ 标 `faithful_light_reimpl` 的配置只是原论文思想的轻量研究实现，不代表原始配方复现。
     官方忠实复现走 `*_official` 臂（SLAug_official 需双视图，见 `apply_train_aug_dual`）。
     """
     img, mask = _joint_geometric_aug(img, mask)
@@ -1145,7 +1145,7 @@ class WaveletBoundaryWrapper(nn.Module):
 
 
 def build_method_model(model: nn.Module, method: str) -> nn.Module:
-    """按 method-dev arm 给 raw segmentation model 加机制壳。"""
+    """按开发配置给 raw segmentation model 加机制壳。"""
     if method == "m2_fad_far":
         return FrequencyDecouplingWrapper(model)
     if method == "m1_wavelet_boundary":
@@ -1387,7 +1387,7 @@ def deep_supervision_loss(model_key: str, outputs: Any, mask: torch.Tensor, meth
 
 
 def consistency_loss(outputs_a: Any, outputs_b: Any, model_key: str, mask: torch.Tensor) -> torch.Tensor:
-    """预测一致性正则，用于频谱外变换 consistency arm。"""
+    """预测一致性正则，用于频谱外变换配置。"""
     logits_a = fuse_outputs(model_key, outputs_a)
     logits_b = fuse_outputs(model_key, outputs_b)
     if logits_a.shape[-2:] != mask.shape[-2:]:
@@ -1489,7 +1489,7 @@ def method_manifest() -> list[dict[str, str]]:
         {"method": "sam2_plain_frozen", "status": "aux_control", "note": "SAM2-UNet plain 控制：prompt adapter 置零冻结，仅训 decoder/RFB/head。"},
         {"method": "spectral_consistency", "status": "faithful_reimpl", "note": "频谱扰动一致性：原图/谱扰动图预测一致性正则，叠加强增强地板。"},
         {"method": "spectral_ibn_combo", "status": "faithful_reimpl_combo", "note": "谱扰动一致性 + IBN feature instance whitening 组合；两个单臂超参保持 batch2 值，不为组合重调。"},
-        # ===== 忠实复现的官方 SOTA：可承重，可进"打赢具名 SOTA"主表 =====
+        # ===== 作者代码适配与忠实度参照 =====
         {
             "method": "SLAug_official",
             "status": "faithful_official",
@@ -1525,20 +1525,20 @@ def method_manifest() -> list[dict[str, str]]:
                 "**比较时必须计入，不得当作同预算对比**。"
             ),
         },
-        # ===== 我们自己的方法（正名：此前误挂 "SLAug" 之名）=====
+        # ===== 研究配置（正名：此前误挂 "SLAug" 之名）=====
         {
             "method": "spatial_warp_aug",
-            "status": "ours_spatial",
+            "status": "study_configuration",
             "note": (
-                "**我们自己的**空间仿射 warp 增广（cv2.warpAffine scale+平移，再与原图 alpha 混合）。"
+                "研究定义的空间仿射 warp 配置（cv2.warpAffine scale+平移，再与原图 alpha 混合）。"
                 "与官方 SLAug 机制无关（那是强度域）。旧名 'SLAug' 系张冠李戴，此为正名；实现与旧臂同一份，历史 run 可复现。"
             ),
         },
         {
             "method": "slaug_official_plus_warp",
-            "status": "ours_combo",
+            "status": "study_combination",
             "note": (
-                "组合臂：官方 SLAug（强度域 GLA/LLA + SBF）为底座，叠我们的 spatial_warp（几何域）。"
+                "组合配置：SLAug（强度域 GLA/LLA + SBF）为底座，叠加 spatial_warp（几何域）。"
                 "施加顺序有两条硬约束：① warp 必须**后置**于 GLA/LLA（LLA 按 mask 分区做强度变换，先 warp 会让 mask 错位）；"
                 "② 两视图共用**同一组 warp 参数**（SBF 按显著图融合 GLA/LLA，空间不对齐会融出鬼影）。"
                 "⚠ 用途=回答'几何能否在最强底座上再加分'，**不是**已证明的'机制正交'——两机制只在实现上作用于不同域，"
@@ -1569,9 +1569,9 @@ def method_manifest() -> list[dict[str, str]]:
                 "⚠ 与 A1 同时在 mask 同步与 alpha blend 两处不同，不得命名为‘标签错位机制’；若与 A1 打平只能按 CI 报告未区分。"
             ),
         },
-        {"method": "spatialwarp_boundary_consistency", "status": "ours_twist", "note": "build-on spatial_warp_aug：等变边界一致性——原图预测经同一空间扰动 grid warp 到扰动坐标系，与扰动图预测在边界带加权比较。"},
-        {"method": "spatialwarp_multiscale_consistency", "status": "ours_twist", "note": "build-on spatial_warp_aug：多尺度一致性——原图缩放(0.75/1.25)预测插值回原尺寸与原图预测 MSE，约束尺度不变。"},
-        {"method": "spatialwarp_scale_adaptive", "status": "ours_twist", "note": "build-on spatial_warp_aug：只改数据增广，对小/扁平病灶用更强空间扰动(scale∈[0.7,1.3]、shift±0.12，前景越小越强)，无一致性 loss。"},
+        {"method": "spatialwarp_boundary_consistency", "status": "development_variant", "note": "空间 warp 的开发变体：等变边界一致性——原图预测经同一空间扰动 grid warp 到扰动坐标系，与扰动图预测在边界带加权比较。"},
+        {"method": "spatialwarp_multiscale_consistency", "status": "development_variant", "note": "空间 warp 的开发变体：多尺度一致性——原图缩放(0.75/1.25)预测插值回原尺寸与原图预测 MSE，约束尺度不变。"},
+        {"method": "spatialwarp_scale_adaptive", "status": "development_variant", "note": "空间 warp 的开发变体：只改数据增广，对小/扁平病灶用更强空间扰动(scale∈[0.7,1.3]、shift±0.12，前景越小越强)，无一致性 loss。"},
         # ===== 轻量近似：† 不承重，只能作覆盖 caveat，禁止挂主 claim =====
         {
             "method": "SLAug",

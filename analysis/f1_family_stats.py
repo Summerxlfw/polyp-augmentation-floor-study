@@ -176,7 +176,7 @@ def write_family_bundle(
     cells.to_csv(cells_path, index=False)
     manifest = {
         "state": "done",
-        "protocol": "F1 and F1-all each contain ten prespecified candidate-minus-floor comparisons; primary inference uses six source-seed cells and Holm adjustment within family; video-cluster bootstrap is supporting",
+        "protocol": "F1 and F1-all each contain ten predefined configuration-minus-floor comparisons; primary inference uses six repeated training units and Holm adjustment within family; video-cluster bootstrap is supporting",
         "primary_case_csv": str(primary_case_csv.resolve()),
         "primary_case_csv_sha256": _sha256(primary_case_csv),
         "external_case_csv": str(external_case_csv.resolve()),

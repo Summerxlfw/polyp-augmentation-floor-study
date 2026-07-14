@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""重算预注册 F4-shape 与 F4-size，并包含各自差异中差成员。"""
+"""重算 multiplicity-controlled shape/size families 与分层响应对比。"""
 
 from __future__ import annotations
 
@@ -62,6 +62,7 @@ def summarize_family_with_contrast(
     summary_rows: list[dict[str, object]] = []
     cell_rows: list[dict[str, object]] = []
     member_cells: dict[str, pd.DataFrame] = {}
+    member_filters: dict[str, Mapping[str, object]] = {}
     for member_label, filters in members:
         result = paired_stats.summarize_comparison(
             table,
@@ -75,6 +76,7 @@ def summarize_family_with_contrast(
         )
         cells = pd.DataFrame(result.pop("cell_rows"))
         member_cells[member_label] = cells
+        member_filters[member_label] = filters
         result.pop("filters")
         result["comparison_id"] = member_label
         result["multiplicity_family"] = family_label
@@ -103,6 +105,17 @@ def summarize_family_with_contrast(
     values = contrasted["contrast_delta"].to_numpy(dtype=np.float64)
     cell_t_ci_low, cell_t_ci_high = paired_stats.cell_t_confidence_interval(values)
     paired_t_p, wilcoxon_p, sign_flip_p = _cell_p_values(values)
+    video_ci_low, video_ci_high = paired_stats.cluster_bootstrap_contrast_ci(
+        table,
+        candidate=candidate,
+        reference=reference,
+        metric=metric,
+        model=model,
+        left_filters=member_filters[left_label],
+        right_filters=member_filters[right_label],
+        n_boot=n_boot,
+        random_seed=random_seed,
+    )
     summary_rows.append(
         {
             "candidate": candidate,
@@ -116,15 +129,15 @@ def summarize_family_with_contrast(
             "mean_delta": float(values.mean()),
             "cell_t_ci_low": cell_t_ci_low,
             "cell_t_ci_high": cell_t_ci_high,
-            "supporting_video_cluster_ci_low": np.nan,
-            "supporting_video_cluster_ci_high": np.nan,
+            "supporting_video_cluster_ci_low": video_ci_low,
+            "supporting_video_cluster_ci_high": video_ci_high,
             "positive_cells": int((values > 0).sum()),
             "paired_t_p": paired_t_p,
             "wilcoxon_p": wilcoxon_p,
             "exact_sign_flip_p": sign_flip_p,
             "comparison_id": contrast_label,
             "multiplicity_family": family_label,
-            "inference_role": "prespecified_difference_in_differences",
+            "inference_role": "multiplicity_controlled_exploratory_contrast",
         }
     )
     for row in contrasted.to_dict(orient="records"):
@@ -205,7 +218,7 @@ def write_family_bundle(
     cells.to_csv(cells_path, index=False)
     manifest = {
         "state": "done",
-        "protocol": "F4-shape contains four Paris-stratum effects plus IIa-minus-Ip DiD; F4-size contains three area-tertile effects plus large-minus-small DiD; primary inference uses six source-seed cells with Holm within family",
+        "protocol": "Outcome-informed exploratory families: shape contains four Paris-stratum effects plus IIa-minus-Ip contrast; size contains three area-tertile effects plus large-minus-small contrast. Six repeated source-seed training units summarize fixed C1/C3 settings; Holm is applied within family.",
         "case_csv": str(case_csv.resolve()),
         "case_csv_sha256": _sha256(case_csv),
         "analysis_script": str(Path(__file__).resolve()),
@@ -218,7 +231,7 @@ def write_family_bundle(
         "metric": metric,
         "n_boot_for_stratum_supporting_intervals": n_boot,
         "random_seed": random_seed,
-        "contrast_supporting_interval": "not_computed; primary six-cell t interval only",
+        "contrast_supporting_interval": "computed by synchronized video-cluster bootstrap with seed resampling within fixed source settings",
         "n_summary_rows": int(len(summary)),
         "n_cell_rows": int(len(cells)),
         "summary_csv": str(summary_path.resolve()),

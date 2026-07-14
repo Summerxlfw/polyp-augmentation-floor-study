@@ -178,6 +178,114 @@ def cluster_bootstrap_ci(
     return float(low), float(high)
 
 
+def cluster_bootstrap_contrast_ci(
+    table: pd.DataFrame,
+    candidate: str,
+    reference: str,
+    metric: str,
+    model: str,
+    left_filters: Mapping[str, object],
+    right_filters: Mapping[str, object],
+    n_boot: int = 10000,
+    random_seed: int = 20260713,
+) -> tuple[float, float]:
+    """按视频同步重采样两个分层，并返回其响应差的支持性区间。"""
+    if n_boot <= 0:
+        raise ValueError("n_boot must be positive")
+    left = paired_case_deltas(
+        table, candidate, reference, metric, model, left_filters
+    )
+    right = paired_case_deltas(
+        table, candidate, reference, metric, model, right_filters
+    )
+
+    def build_payload(
+        paired: pd.DataFrame,
+    ) -> tuple[dict[object, dict[object, dict[str, np.ndarray]]], list[str]]:
+        payload: dict[object, dict[object, dict[str, np.ndarray]]] = {}
+        expected_case_universe: set[tuple[str, str]] | None = None
+        video_keys: list[str] | None = None
+        for source, source_df in paired.groupby("source_center", sort=True):
+            payload[source] = {}
+            for seed, seed_df in source_df.groupby("seed", sort=True):
+                normalized = seed_df.assign(
+                    _video_key=seed_df["video_id"].astype(str),
+                    _case_key=seed_df["case_id"].astype(str),
+                )
+                case_universe = set(
+                    normalized[["_video_key", "_case_key"]].itertuples(
+                        index=False, name=None
+                    )
+                )
+                if expected_case_universe is None:
+                    expected_case_universe = case_universe
+                elif case_universe != expected_case_universe:
+                    raise ValueError("contrast case/video universe differs across cells")
+                cell_payload = {
+                    str(video): video_df["delta"].to_numpy(dtype=np.float64)
+                    for video, video_df in normalized.groupby("_video_key", sort=True)
+                }
+                current_video_keys = sorted(cell_payload)
+                if video_keys is None:
+                    video_keys = current_video_keys
+                elif current_video_keys != video_keys:
+                    raise ValueError("contrast video universe differs across cells")
+                payload[source][seed] = cell_payload
+        if not video_keys:
+            raise ValueError("no video clusters found for contrast member")
+        return payload, video_keys
+
+    left_payload, left_videos = build_payload(left)
+    right_payload, right_videos = build_payload(right)
+    if set(left_payload) != set(right_payload):
+        raise ValueError("source keys differ between contrast members")
+    for source in left_payload:
+        if set(left_payload[source]) != set(right_payload[source]):
+            raise ValueError("seed keys differ between contrast members")
+
+    video_keys = sorted(set(left_videos) | set(right_videos))
+    left_video_set = set(left_videos)
+    right_video_set = set(right_videos)
+    rng = np.random.default_rng(random_seed)
+    draws: list[float] = []
+    attempts = 0
+    max_attempts = n_boot * 100
+    while len(draws) < n_boot and attempts < max_attempts:
+        attempts += 1
+        sampled_indices = rng.integers(0, len(video_keys), size=len(video_keys))
+        sampled_videos = [video_keys[index] for index in sampled_indices]
+        if not any(video in left_video_set for video in sampled_videos):
+            continue
+        if not any(video in right_video_set for video in sampled_videos):
+            continue
+        source_means = []
+        for source in sorted(left_payload, key=str):
+            seeds = np.asarray(list(left_payload[source]))
+            sampled_seeds = rng.choice(seeds, size=len(seeds), replace=True)
+            seed_contrasts = []
+            for seed in sampled_seeds:
+                left_arrays = [
+                    left_payload[source][seed][video]
+                    for video in sampled_videos
+                    if video in left_payload[source][seed]
+                ]
+                right_arrays = [
+                    right_payload[source][seed][video]
+                    for video in sampled_videos
+                    if video in right_payload[source][seed]
+                ]
+                seed_contrasts.append(
+                    float(np.concatenate(left_arrays).mean())
+                    - float(np.concatenate(right_arrays).mean())
+                )
+            source_means.append(float(np.mean(seed_contrasts)))
+        draws.append(float(np.mean(source_means)))
+    if len(draws) != n_boot:
+        raise ValueError("unable to draw valid contrast bootstrap samples")
+    low, high = np.percentile(np.asarray(draws), [2.5, 97.5])
+    return float(low), float(high)
+
+
 def cell_t_confidence_interval(
     values: Sequence[float],
     confidence: float = 0.95,
@@ -347,7 +455,7 @@ def write_analysis_bundle(
     pd.DataFrame(cell_rows).to_csv(cells_path, index=False)
     manifest = {
         "state": "done",
-        "protocol": "primary paired-t interval on six source-seed cells; supporting case-equal interval from seed-within-source bootstrap plus one aligned video-cluster resample shared across all source-seed cells",
+        "protocol": "primary paired-t interval on six repeated training units; supporting case-equal interval from seed-within-source bootstrap plus one aligned video-cluster resample shared across all repeated training units",
         "case_csv": str(case_csv.resolve()),
         "case_csv_sha256": _sha256(case_csv),
         "analysis_script": str(Path(__file__).resolve()),

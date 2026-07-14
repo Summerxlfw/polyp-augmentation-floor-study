@@ -136,7 +136,7 @@ def write_family_bundle(
     cells.to_csv(cells_path, index=False)
     manifest = {
         "state": "done",
-        "protocol": "three separate four-comparison Holm families on hard-flat IIa cases; primary inference uses six source-seed cells; aligned video-cluster bootstrap is supporting",
+        "protocol": "three separate four-comparison Holm families on Paris IIa cases; primary inference uses six repeated training units; aligned video-cluster bootstrap is supporting",
         "case_csv": str(case_csv.resolve()),
         "case_csv_sha256": _sha256(case_csv),
         "metric_code": str(metric_code.resolve()),

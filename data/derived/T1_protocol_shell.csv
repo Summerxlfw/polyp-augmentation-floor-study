@@ -10,6 +10,7 @@ external_unit,lesion case,285,cases,ready,external manifest
 external_cluster,video,100,videos,ready,external manifest
 phenotype,Is;IIa;Ip;Isp,134;101;28;22,cases,ready,external manifest
 area_proxy,small;mid;large,95;95;95,cases,ready,derived tertiles
-formal_matrix,10 protocol arms,60,runs,complete,T0 training audit
-official_comparator,official SLAug,6,runs,complete,official-code port audit
-structural_control,joint_affine_floor,6,runs,complete,joint-affine final-control audit
+formal_matrix,10 shared-protocol configurations,60,runs,complete,T0 training audit
+named_comparator,SLAug adaptation,6,runs,complete,authors' public code retrained under the shared protocol
+secondary_controls,4 isolation + joint affine + paired affine softmix,36,runs,complete,isolation and formulation-control audits
+total_training_runs,17 training configurations,102,runs,complete,complete study inventory
